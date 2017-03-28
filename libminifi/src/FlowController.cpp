@@ -97,7 +97,7 @@ FlowControllerImpl::FlowControllerImpl(std::string name)  {
 	   }
 	}
 
-	
+
 	std::string clientAuthStr;
 
 	if (!path) {
@@ -210,6 +210,8 @@ Processor *FlowControllerImpl::createProcessor(std::string name, uuid_t uuid) {
 		processor = new ListenSyslog(name, uuid);
 	} else if (name == ListenHTTP::ProcessorName) {
         processor = new ListenHTTP(name, uuid);
+	} else if (name == FocusArchive::ProcessorName) {
+        processor = new FocusArchive(name, uuid);
 	} else if (name == ExecuteProcess::ProcessorName) {
 		processor = new ExecuteProcess(name, uuid);
 	} else if (name == AppendHostInfo::ProcessorName) {

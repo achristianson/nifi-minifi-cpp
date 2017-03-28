@@ -79,7 +79,7 @@ Perspectives of the role of MiNiFi should be from the perspective of the agent a
 #### Libraries
 * libuuid
 * libleveldb
-* libssl and libcrypto from openssl 
+* libssl and libcrypto from openssl
 
 The needed dependencies can be installed with the following commands for:
 
@@ -90,7 +90,8 @@ $ yum install cmake \
   gcc gcc-c++ \
   leveldb-devel leveldb \
   libuuid libuuid-devel \
-  boost-devel \ libssl-dev
+  boost-devel \ libssl-dev \
+  libarchive-devel
 ```
 
 Aptitude based Linux Distributions
@@ -100,7 +101,8 @@ $ apt-get install cmake \
   gcc g++ \
   libleveldb-dev libleveldb1v5 \
   uuid-dev uuid \
-  libboost-all-dev libssl-dev
+  libboost-all-dev libssl-dev \
+  libarchive-dev
 ```
 
 OS X Using Homebrew (with XCode Command Line Tools installed)
@@ -215,7 +217,7 @@ $ rm -rf ./build
 ```
 
 ### Configuring
-The 'conf' directory in the root contains a template config.yml document.  
+The 'conf' directory in the root contains a template config.yml document.
 
 This is compatible with the format used with the Java MiNiFi application.  Currently, a subset of the configuration is supported and MiNiFi C++ is currently compatible with version 1 of the MiNiFi YAML schema.
 Additional information on the YAML format for the config.yml and schema versioning can be found in the [MiNiFi System Administrator Guide](https://nifi.apache.org/minifi/system-admin-guide.html).
@@ -245,7 +247,7 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
     Connections:
         - name: TransferFilesToRPG
           id: 471deef6-2a6e-4a7d-912a-81cc17e3a207
-          source id: 471deef6-2a6e-4a7d-912a-81cc17e3a206 
+          source id: 471deef6-2a6e-4a7d-912a-81cc17e3a206
           source relationship name: success
           destination id: 471deef6-2a6e-4a7d-912a-81cc17e3a204
           max work queue size: 0
@@ -268,12 +270,12 @@ Additionally, users can utilize the MiNiFi Toolkit Converter (version 0.0.1 - sc
 
 ### Site2Site Security Configuration
 
-    in minifi.properties 
+    in minifi.properties
 
     enable tls ssl
     nifi.remote.input.secure=true
 
-    if you want to enable client certificate base authorization 
+    if you want to enable client certificate base authorization
     nifi.security.need.ClientAuth=true
     setup the client certificate and private key PEM files
     nifi.security.client.certificate=./conf/client.pem
@@ -293,7 +295,7 @@ After completing a [build](#building), the application can be run by issuing the
 
 By default, this will make use of a config.yml located in the conf directory.  This configuration file location can be altered by adjusting the property `nifi.flow.configuration.file` in minifi.properties located in the conf directory.
 
-### Stopping  
+### Stopping
 
 MiNiFi can then be stopped by issuing:
 

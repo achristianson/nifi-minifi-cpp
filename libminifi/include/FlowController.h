@@ -54,6 +54,7 @@
 #include "TailFile.h"
 #include "ListenSyslog.h"
 #include "ListenHTTP.h"
+#include "FocusArchive.h"
 #include "ExecuteProcess.h"
 #include "AppendHostInfo.h"
 // OpenSSL related
@@ -182,7 +183,7 @@ public:
 	}
 
 protected:
-  
+
 	//! A global unique identifier
 	uuid_t _uuid;
 	//! FlowController Name
@@ -218,7 +219,7 @@ protected:
 	//! Heart Beat
 	//! FlowControl Protocol
 	FlowControlProtocol *_protocol;
-	
+
 
 	FlowController() :
 			_root(0), _maxTimerDrivenThreads(0), _maxEventDrivenThreads(0), _running(
@@ -281,14 +282,14 @@ public:
 	 */
 	FlowControllerImpl(std::string name = DEFAULT_ROOT_GROUP_NAME);
 
-	
-	
-	
+
+
+
 	friend class FlowControlFactory;
 
 private:
-  
-	
+
+
 
 	//! Mutex for protection
 	std::mutex _mtx;

@@ -1,6 +1,6 @@
 /**
- * @file MiNiFiMain.cpp 
- * MiNiFiMain implementation 
+ * @file MiNiFiMain.cpp
+ * MiNiFiMain implementation
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -78,7 +78,7 @@ void sigHandler(int signal) {
 int main(int argc, char **argv) {
 	std::shared_ptr<Logger> logger = Logger::getLogger();
 
-	logger->setLogLevel(info);
+	logger->setLogLevel(debug);
 
 	uint16_t stop_wait_time = STOP_WAIT_TIME_MS;
 
