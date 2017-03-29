@@ -38,7 +38,7 @@
 class ResourceClaim {
 
 public:
-  
+
 	static std::string default_directory_path;
 	//! Constructor
 	/*!
@@ -47,15 +47,15 @@ public:
 	ResourceClaim(const std::string contentDirectory = default_directory_path);
 	//! Destructor
 	virtual ~ResourceClaim() {}
-	//! increaseFlowFileRecordOwnedCount
-	void increaseFlowFileRecordOwnedCount()
+	//! Increase ownership count and return value immediately preceding the effects of this function
+	uint64_t increaseFlowFileRecordOwnedCount()
 	{
-		++_flowFileRecordOwnedCount;
+		return _flowFileRecordOwnedCount.fetch_add(1, std::memory_order_relaxed);
 	}
-	//! decreaseFlowFileRecordOwenedCount
-	void decreaseFlowFileRecordOwnedCount()
+	//! Decrease ownership count and return value immediately preceding the effects of this function
+	uint64_t decreaseFlowFileRecordOwnedCount()
 	{
-		--_flowFileRecordOwnedCount;
+		return _flowFileRecordOwnedCount.fetch_sub(1, std::memory_order_relaxed);
 	}
 	//! getFlowFileRecordOwenedCount
 	uint64_t getFlowFileRecordOwnedCount()

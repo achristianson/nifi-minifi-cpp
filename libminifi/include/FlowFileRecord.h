@@ -212,6 +212,8 @@ protected:
 	std::map<std::string, std::string> _attributes;
 	//! Pointer to the associated content resource claim
 	ResourceClaim *_claim;
+	//! Pointers to stashed content resource claims
+	std::map<std::string, ResourceClaim *> _stashedContent;
 	//! UUID string
 	std::string _uuidStr;
 	//! UUID string for all parents
@@ -220,6 +222,8 @@ protected:
 	bool _isStoredToRepo;
 	//! duplicate the original flow file
 	void duplicate(FlowFileRecord *original);
+	//! Relinquish ownership of a resource claim (thread safe)
+	void disown(ResourceClaim *claim);
 
 private:
 

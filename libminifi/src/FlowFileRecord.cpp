@@ -1,6 +1,6 @@
 /**
  * @file FlowFileRecord.cpp
- * Flow file record class implementation 
+ * Flow file record class implementation
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -121,22 +121,32 @@ FlowFileRecord::~FlowFileRecord()
 		logger_->log_debug("Delete SnapShot FlowFile UUID %s", _uuidStr.c_str());
 	if (_claim)
 	{
-		// Decrease the flow file record owned count for the resource claim
-		_claim->decreaseFlowFileRecordOwnedCount();
-		if (_claim->getFlowFileRecordOwnedCount() <= 0)
+		disown(_claim);
+	}
+
+	// Disown stash claims
+	for (const auto &stashPair : _stashedContent)
+	{
+		disown(stashPair.second);
+	}
+}
+
+void FlowFileRecord::disown(ResourceClaim *claim)
+{
+	// Decrease the flow file record owned count for the resource claim
+	if (claim->decreaseFlowFileRecordOwnedCount() == 1)
+	{
+		logger_->log_debug("Delete Resource Claim %s", claim->getContentFullPath().c_str());
+		std::string value;
+		if (!FlowControllerFactory::getFlowController()->getFlowFileRepository() ||
+				!FlowControllerFactory::getFlowController()->getFlowFileRepository()->isEnable() ||
+				!this->_isStoredToRepo ||
+				!FlowControllerFactory::getFlowController()->getFlowFileRepository()->Get(_uuidStr, value))
 		{
-			logger_->log_debug("Delete Resource Claim %s", _claim->getContentFullPath().c_str());
-			std::string value;
-			if (!FlowControllerFactory::getFlowController()->getFlowFileRepository() ||
-					!FlowControllerFactory::getFlowController()->getFlowFileRepository()->isEnable() ||
-					!this->_isStoredToRepo ||
-					!FlowControllerFactory::getFlowController()->getFlowFileRepository()->Get(_uuidStr, value))
-			{
-				// if it is persistent to DB already while it is in the queue, we keep the content
-				std::remove(_claim->getContentFullPath().c_str());
-			}
-			delete _claim;
+			// if it is persistent to DB already while it is in the queue, we keep the content
+			std::remove(claim->getContentFullPath().c_str());
 		}
+		delete claim;
 	}
 }
 

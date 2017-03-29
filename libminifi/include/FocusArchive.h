@@ -64,9 +64,9 @@ public:
 
 	typedef struct
 	{
-		std::string archiveType;
-		int archiveTypeId;
-		std::map<std::string, ArchiveEntryMetadata> entryMetadata;
+		std::string archiveFormatName;
+		int archiveFormat;
+		std::vector<ArchiveEntryMetadata> entryMetadata;
 	} ArchiveMetadata;
 
 	class ReadCallback : public InputStreamCallback

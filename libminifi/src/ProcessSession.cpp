@@ -435,8 +435,7 @@ void ProcessSession::import(std::string source, FlowFileRecord *flow, bool keepS
 				flow->_offset = 0;
 				if (flow->_claim)
 				{
-					// Remove the old claim
-					flow->_claim->decreaseFlowFileRecordOwnedCount();
+					flow->disown(flow->_claim);
 					flow->_claim = NULL;
 				}
 				flow->_claim = claim;
@@ -472,7 +471,7 @@ void ProcessSession::import(std::string source, FlowFileRecord *flow, bool keepS
 	{
 		if (flow && flow->_claim == claim)
 		{
-			flow->_claim->decreaseFlowFileRecordOwnedCount();
+			flow->disown(flow->_claim);
 			flow->_claim = NULL;
 		}
 		if (claim)
@@ -485,7 +484,7 @@ void ProcessSession::import(std::string source, FlowFileRecord *flow, bool keepS
 	{
 		if (flow && flow->_claim == claim)
 		{
-			flow->_claim->decreaseFlowFileRecordOwnedCount();
+			flow->disown(flow->_claim);
 			flow->_claim = NULL;
 		}
 		if (claim)
@@ -494,6 +493,54 @@ void ProcessSession::import(std::string source, FlowFileRecord *flow, bool keepS
 		delete[] buf;
 		throw;
 	}
+}
+
+//! Stash the content to a key
+void ProcessSession::stash(std::string key, FlowFileRecord *flow)
+{
+	logger_->log_info("Stashing content from %s to key %s", flow->getUUIDStr().c_str(), key.c_str());
+
+	if (!flow->_claim)
+	{
+		logger_->log_warn("Attempted to stash content of record %s when there is no resource claim", flow->getUUIDStr().c_str());
+		return;
+	}
+
+	// Stash the claim
+	if (flow->_stashedContent.find(key) != flow->_stashedContent.end())
+	{
+		logger_->log_warn("Stashing content of record %s to existing key %s; existing content will be overwritten", flow->getUUIDStr().c_str(), key.c_str());
+		flow->disown(flow->_stashedContent[key]);
+	}
+
+	flow->_stashedContent[key] = flow->_claim;
+
+	// Set current claim to NULL
+	flow->_claim = NULL;
+}
+
+//! Restore content previously stashed to a key
+void ProcessSession::restore(std::string key, FlowFileRecord *flow)
+{
+	logger_->log_info("Restoring content to %s from key %s", flow->getUUIDStr().c_str(), key.c_str());
+
+	// Restore the claim
+	if (flow->_stashedContent.find(key) == flow->_stashedContent.end())
+	{
+		logger_->log_warn("Requested restore to record %s from unknown key %s", flow->getUUIDStr().c_str(), key.c_str());
+		return;
+	}
+
+	// Disown current claim if existing
+	if (flow->_claim)
+	{
+		logger_->log_warn("Restoring stashed content of record %s from key %s when there is existing content; existing content will be overwritten", flow->getUUIDStr().c_str(), key.c_str());
+		flow->disown(flow->_claim);
+	}
+
+	// Restore the claim
+	flow->_claim = flow->_stashedContent[key];
+	flow->_stashedContent.erase(key);
 }
 
 void ProcessSession::commit()

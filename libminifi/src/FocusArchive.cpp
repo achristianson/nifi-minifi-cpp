@@ -61,8 +61,8 @@ void FocusArchive::onTrigger(ProcessContext *context, ProcessSession *session)
 		return;
 	}
 
-	std::string focusPath;
-	context->getProperty(Path.getName(), focusPath);
+	std::string targetEntry;
+	context->getProperty(Path.getName(), targetEntry);
 
 	// Get lens stack from attribute (if present), or create new empty stack
 
@@ -79,23 +79,42 @@ void FocusArchive::onTrigger(ProcessContext *context, ProcessSession *session)
 	session->read(flowFile, &cb);
 
 	// For each extracted entry, import & stash to key
-	for (auto &entry : archiveMetadata.entryMetadata)
+	std::string targetEntryStashKey;
+
+	for (auto &entryMetadata : archiveMetadata.entryMetadata)
 	{
-		auto &entryMetadata = entry.second;
-		_logger->log_info("FocusArchive importing %s from %s",
-				entryMetadata.entryName.c_str(),
-				entryMetadata.tmpFileName.c_str());
-		session->import(entryMetadata.tmpFileName, flowFile, false, 0);
-		char stashKey[37];
-		uuid_t stashKeyUuid;
-		uuid_generate(stashKeyUuid);
-		uuid_unparse_lower(stashKeyUuid, stashKey);
-		_logger->log_debug("FocusArchive generated stash key %s for entry %s", stashKey, entryMetadata.entryName.c_str());
-		entryMetadata.stashKey.assign(stashKey);
-		//TODO stash
+		if (entryMetadata.entryType == AE_IFREG)
+		{
+			_logger->log_info("FocusArchive importing %s from %s",
+					entryMetadata.entryName.c_str(),
+					entryMetadata.tmpFileName.c_str());
+			session->import(entryMetadata.tmpFileName, flowFile, false, 0);
+			char stashKey[37];
+			uuid_t stashKeyUuid;
+			uuid_generate(stashKeyUuid);
+			uuid_unparse_lower(stashKeyUuid, stashKey);
+			_logger->log_debug("FocusArchive generated stash key %s for entry %s", stashKey, entryMetadata.entryName.c_str());
+			entryMetadata.stashKey.assign(stashKey);
+
+			if (entryMetadata.entryName == targetEntry)
+			{
+				targetEntryStashKey = entryMetadata.stashKey;
+			}
+
+			// Stash the content
+			session->stash(entryMetadata.stashKey, flowFile);
+		}
 	}
 
 	// Restore target archive entry
+	if (targetEntryStashKey != "")
+	{
+		session->restore(targetEntryStashKey, flowFile);
+	}
+	else
+	{
+		_logger->log_warn("FocusArchive failed to locate target entry: %s", targetEntry.c_str());
+	}
 
 	// Set new/updated lens stack to attribute
 	{
@@ -117,9 +136,8 @@ void FocusArchive::onTrigger(ProcessContext *context, ProcessSession *session)
 		Value structVal;
 		structVal.SetArray();
 
-		for (const auto &entry : archiveMetadata.entryMetadata)
+		for (const auto &entryMetadata : archiveMetadata.entryMetadata)
 		{
-			const auto &entryMetadata = entry.second;
 			Value entryVal;
 			entryVal.SetObject();
 
@@ -127,19 +145,25 @@ void FocusArchive::onTrigger(ProcessContext *context, ProcessSession *session)
 			entryNameVal.SetString(entryMetadata.entryName.c_str(), entryMetadata.entryName.length());
 			entryVal.AddMember("entry_name", entryNameVal, alloc);
 
-			Value stashKeyVal;
-			stashKeyVal.SetString(entryMetadata.stashKey.c_str(), entryMetadata.stashKey.length());
-			entryVal.AddMember("stash_key", stashKeyVal, alloc);
+			entryVal.AddMember("entry_type", entryMetadata.entryType, alloc);
+			entryVal.AddMember("entry_perm", entryMetadata.entryPerm, alloc);
+
+			if (entryMetadata.entryType == AE_IFREG)
+			{
+				Value stashKeyVal;
+				stashKeyVal.SetString(entryMetadata.stashKey.c_str(), entryMetadata.stashKey.length());
+				entryVal.AddMember("stash_key", stashKeyVal, alloc);
+			}
 
 			structVal.PushBack(entryVal, alloc);
 		}
 
 		Value lensVal;
 		lensVal.SetObject();
-		Value typeVal;
-		typeVal.SetString(archiveMetadata.archiveType.c_str(), archiveMetadata.archiveType.length());
-		lensVal.AddMember("archive_type", typeVal, alloc);
-		lensVal.AddMember("archive_type_id", archiveMetadata.archiveTypeId, alloc);
+		Value formatNameVal;
+		formatNameVal.SetString(archiveMetadata.archiveFormatName.c_str(), archiveMetadata.archiveFormatName.length());
+		lensVal.AddMember("archive_format_name", formatNameVal, alloc);
+		lensVal.AddMember("archive_format", archiveMetadata.archiveFormat, alloc);
 		lensVal.AddMember("archive_structure", structVal, alloc);
 		doc.PushBack(lensVal, alloc);
 
@@ -239,27 +263,36 @@ void FocusArchive::ReadCallback::process(std::ifstream *stream)
 		}
 
 		auto entryName = archive_entry_pathname(entry);
-		(*_archiveMetadata).archiveType.assign(archive_format_name(inputArchive));
-		(*_archiveMetadata).archiveTypeId = archive_format(inputArchive);
+		(*_archiveMetadata).archiveFormatName.assign(archive_format_name(inputArchive));
+		(*_archiveMetadata).archiveFormat = archive_format(inputArchive);
 
-		// Write content to tmp file
-		auto tmpFileName = boost::filesystem::unique_path().native();
+		// Record entry metadata
+		auto entryType = archive_entry_filetype(entry);
+
 		ArchiveEntryMetadata metadata;
 		metadata.entryName = entryName;
-		metadata.tmpFileName = tmpFileName;
-		metadata.entryType = archive_entry_filetype(entry);
+		metadata.entryType = entryType;
 		metadata.entryPerm = archive_entry_perm(entry);
-		(*_archiveMetadata).entryMetadata[entryName] = metadata;
-		_logger->log_info("FocusArchive extracting %s to: %s", entryName, tmpFileName.c_str());
 
-		auto fd = fopen(tmpFileName.c_str(), "w");
-
-		if (archive_entry_size(entry) > 0)
+		// Write content to tmp file
+		if (entryType == AE_IFREG)
 		{
-			archive_read_data_into_fd(inputArchive, fileno(fd));
+			auto tmpFileName = boost::filesystem::unique_path().native();
+			metadata.tmpFileName = tmpFileName;
+			metadata.entryType = entryType;
+			_logger->log_info("FocusArchive extracting %s to: %s", entryName, tmpFileName.c_str());
+
+			auto fd = fopen(tmpFileName.c_str(), "w");
+
+			if (archive_entry_size(entry) > 0)
+			{
+				archive_read_data_into_fd(inputArchive, fileno(fd));
+			}
+
+			fclose(fd);
 		}
 
-		fclose(fd);
+		(*_archiveMetadata).entryMetadata.push_back(metadata);
 	}
 
 	archive_read_close(inputArchive);
