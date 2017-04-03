@@ -1,6 +1,6 @@
 /**
- * @file FocusArchive.cpp
- * FocusArchive class implementation
+ * @file FocusArchiveEntry.cpp
+ * FocusArchiveEntry class implementation
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -30,17 +30,17 @@
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 
-#include "FocusArchive.h"
+#include "FocusArchiveEntry.h"
 #include "ProcessContext.h"
 #include "ProcessSession.h"
 
 using namespace rapidjson;
 
-const std::string FocusArchive::ProcessorName("FocusArchive");
-Property FocusArchive::Path("Path", "The path within the archive to focus (\"/\" to focus the total archive)", "");
-Relationship FocusArchive::Success("success", "success operational on the flow record");
+const std::string FocusArchiveEntry::ProcessorName("FocusArchiveEntry");
+Property FocusArchiveEntry::Path("Path", "The path within the archive to focus (\"/\" to focus the total archive)", "");
+Relationship FocusArchiveEntry::Success("success", "success operational on the flow record");
 
-void FocusArchive::initialize()
+void FocusArchiveEntry::initialize()
 {
 	//! Set the supported properties
 	std::set<Property> properties;
@@ -52,7 +52,7 @@ void FocusArchive::initialize()
 	setSupportedRelationships(relationships);
 }
 
-void FocusArchive::onTrigger(ProcessContext *context, ProcessSession *session)
+void FocusArchiveEntry::onTrigger(ProcessContext *context, ProcessSession *session)
 {
 	FlowFileRecord *flowFile = session->get();
 
@@ -64,18 +64,10 @@ void FocusArchive::onTrigger(ProcessContext *context, ProcessSession *session)
 	std::string targetEntry;
 	context->getProperty(Path.getName(), targetEntry);
 
-	// Get lens stack from attribute (if present), or create new empty stack
-
-	// Are we focusing in or out?
-	// call focusIn()
-
-	// call focusOut()
-
-	// Focus in:
-
-	// ReadCallback
+	// Extract archive contents
 	ArchiveMetadata archiveMetadata;
-	ReadCallback cb(session, &archiveMetadata);
+	archiveMetadata.focusedEntry = targetEntry;
+	ReadCallback cb(&archiveMetadata);
 	session->read(flowFile, &cb);
 
 	// For each extracted entry, import & stash to key
@@ -85,7 +77,7 @@ void FocusArchive::onTrigger(ProcessContext *context, ProcessSession *session)
 	{
 		if (entryMetadata.entryType == AE_IFREG)
 		{
-			_logger->log_info("FocusArchive importing %s from %s",
+			_logger->log_info("FocusArchiveEntry importing %s from %s",
 					entryMetadata.entryName.c_str(),
 					entryMetadata.tmpFileName.c_str());
 			session->import(entryMetadata.tmpFileName, flowFile, false, 0);
@@ -93,7 +85,7 @@ void FocusArchive::onTrigger(ProcessContext *context, ProcessSession *session)
 			uuid_t stashKeyUuid;
 			uuid_generate(stashKeyUuid);
 			uuid_unparse_lower(stashKeyUuid, stashKey);
-			_logger->log_debug("FocusArchive generated stash key %s for entry %s", stashKey, entryMetadata.entryName.c_str());
+			_logger->log_debug("FocusArchiveEntry generated stash key %s for entry %s", stashKey, entryMetadata.entryName.c_str());
 			entryMetadata.stashKey.assign(stashKey);
 
 			if (entryMetadata.entryName == targetEntry)
@@ -113,7 +105,7 @@ void FocusArchive::onTrigger(ProcessContext *context, ProcessSession *session)
 	}
 	else
 	{
-		_logger->log_warn("FocusArchive failed to locate target entry: %s", targetEntry.c_str());
+		_logger->log_warn("FocusArchiveEntry failed to locate target entry: %s", targetEntry.c_str());
 	}
 
 	// Set new/updated lens stack to attribute
@@ -125,7 +117,7 @@ void FocusArchive::onTrigger(ProcessContext *context, ProcessSession *session)
 
 		if (flowFile->getAttribute("lens.archive.stack", existingLensStack))
 		{
-			_logger->log_info("FocusArchive loading existing lens context");
+			_logger->log_info("FocusArchiveEntry loading existing lens context");
 			doc.Parse(existingLensStack.c_str());
 		}
 		else
@@ -163,6 +155,9 @@ void FocusArchive::onTrigger(ProcessContext *context, ProcessSession *session)
 		Value formatNameVal;
 		formatNameVal.SetString(archiveMetadata.archiveFormatName.c_str(), archiveMetadata.archiveFormatName.length());
 		lensVal.AddMember("archive_format_name", formatNameVal, alloc);
+		Value focusedEntryVal;
+		focusedEntryVal.SetString(archiveMetadata.focusedEntry.c_str(), archiveMetadata.focusedEntry.length());
+		lensVal.AddMember("focused_entry", focusedEntryVal, alloc);
 		lensVal.AddMember("archive_format", archiveMetadata.archiveFormat, alloc);
 		lensVal.AddMember("archive_structure", structVal, alloc);
 		doc.PushBack(lensVal, alloc);
@@ -179,15 +174,6 @@ void FocusArchive::onTrigger(ProcessContext *context, ProcessSession *session)
 		}
 	}
 
-	// Focus out:
-
-	// Restore entries from stash, one-by-one, to tmp files
-
-	// Create archive by restoring each entry in the archive from tmp files
-	// WriteCallback
-
-	// Set new/updated lens stack to attribute; height(stack') = height(stack) - 1
-
     // Transfer to the relationship
     session->transfer(flowFile, Success);
 }
@@ -196,14 +182,14 @@ typedef struct
 {
 	std::ifstream *stream;
 	char buf[8196];
-} FocusArchiveReadData;
+} FocusArchiveEntryReadData;
 
-void FocusArchive::ReadCallback::process(std::ifstream *stream)
+void FocusArchiveEntry::ReadCallback::process(std::ifstream *stream)
 {
 	auto inputArchive = archive_read_new();
 	struct archive_entry *entry;
 
-	FocusArchiveReadData data;
+	FocusArchiveEntryReadData data;
 	data.stream = stream;
 
 	archive_read_support_format_all(inputArchive);
@@ -212,7 +198,7 @@ void FocusArchive::ReadCallback::process(std::ifstream *stream)
 	// Read callback which reads from ifstream
 	auto read = [] (archive *, void *d, const void **buf) -> long
 	{
-		auto data = static_cast<FocusArchiveReadData *>(d);
+		auto data = static_cast<FocusArchiveEntryReadData *>(d);
 		*buf = data->buf;
 		long read = 0;
 
@@ -237,7 +223,7 @@ void FocusArchive::ReadCallback::process(std::ifstream *stream)
 
 	if ((res = archive_read_open(inputArchive, &data, NULL, read, close)))
 	{
-			_logger->log_error("FocusArchive can't open due to archive error: %s", archive_error_string(inputArchive));
+			_logger->log_error("FocusArchiveEntry can't open due to archive error: %s", archive_error_string(inputArchive));
 			return;
 	}
 
@@ -252,13 +238,13 @@ void FocusArchive::ReadCallback::process(std::ifstream *stream)
 
 		if (res < ARCHIVE_OK)
 		{
-			_logger->log_error("FocusArchive can't read header due to archive error: %s", archive_error_string(inputArchive));
+			_logger->log_error("FocusArchiveEntry can't read header due to archive error: %s", archive_error_string(inputArchive));
 			return;
 		}
 
 		if (res < ARCHIVE_WARN)
 		{
-			_logger->log_warn("FocusArchive got archive warning while reading header: %s", archive_error_string(inputArchive));
+			_logger->log_warn("FocusArchiveEntry got archive warning while reading header: %s", archive_error_string(inputArchive));
 			return;
 		}
 
@@ -280,7 +266,7 @@ void FocusArchive::ReadCallback::process(std::ifstream *stream)
 			auto tmpFileName = boost::filesystem::unique_path().native();
 			metadata.tmpFileName = tmpFileName;
 			metadata.entryType = entryType;
-			_logger->log_info("FocusArchive extracting %s to: %s", entryName, tmpFileName.c_str());
+			_logger->log_info("FocusArchiveEntry extracting %s to: %s", entryName, tmpFileName.c_str());
 
 			auto fd = fopen(tmpFileName.c_str(), "w");
 
@@ -300,13 +286,12 @@ void FocusArchive::ReadCallback::process(std::ifstream *stream)
 
 }
 
-FocusArchive::ReadCallback::ReadCallback(ProcessSession *session, ArchiveMetadata *archiveMetadata)
+FocusArchiveEntry::ReadCallback::ReadCallback(ArchiveMetadata *archiveMetadata)
 {
 	_logger = Logger::getLogger();
-	_session = session;
 	_archiveMetadata = archiveMetadata;
 }
 
-FocusArchive::ReadCallback::~ReadCallback()
+FocusArchiveEntry::ReadCallback::~ReadCallback()
 {
 }

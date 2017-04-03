@@ -495,7 +495,40 @@ void ProcessSession::import(std::string source, FlowFileRecord *flow, bool keepS
 	}
 }
 
-//! Stash the content to a key
+
+void ProcessSession::exportContent(std::string destination, FlowFileRecord *flow, bool keepContent)
+{
+	logger_->log_info("Exporting content of %s to %s", flow->getUUIDStr().c_str(), destination.c_str());
+
+	if (keepContent)
+	{
+
+	}
+	else
+	{
+		// Since we are not keeping content, rename the resource file to the destination
+		if (!flow->_claim)
+		{
+			logger_->log_warn("There is no resource for record %s to export.", flow->getUUIDStr().c_str());
+			return;
+		}
+
+		// If we have the only claim to this resource, mv the file for optimal efficiency
+		if (flow->_claim->getFlowFileRecordOwnedCount() == 1)
+		{
+			logger_->log_info("Exporting content by renaming %s to %s", flow->_claim->getContentFullPath().c_str(), destination.c_str());
+			std::rename(flow->_claim->getContentFullPath().c_str(), destination.c_str());
+		}
+		else
+		{
+			logger_->log_info("Exporting content by copying %s to %s due to %d extant claims",
+					flow->_claim->getContentFullPath().c_str(),
+					destination.c_str(),
+					flow->_claim->getFlowFileRecordOwnedCount());
+		}
+	}
+}
+
 void ProcessSession::stash(std::string key, FlowFileRecord *flow)
 {
 	logger_->log_info("Stashing content from %s to key %s", flow->getUUIDStr().c_str(), key.c_str());
@@ -519,7 +552,6 @@ void ProcessSession::stash(std::string key, FlowFileRecord *flow)
 	flow->_claim = NULL;
 }
 
-//! Restore content previously stashed to a key
 void ProcessSession::restore(std::string key, FlowFileRecord *flow)
 {
 	logger_->log_info("Restoring content to %s from key %s", flow->getUUIDStr().c_str(), key.c_str());

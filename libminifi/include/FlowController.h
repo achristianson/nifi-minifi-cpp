@@ -54,7 +54,8 @@
 #include "TailFile.h"
 #include "ListenSyslog.h"
 #include "ListenHTTP.h"
-#include "FocusArchive.h"
+#include "FocusArchiveEntry.h"
+#include "UnfocusArchiveEntry.h"
 #include "ExecuteProcess.h"
 #include "AppendHostInfo.h"
 // OpenSSL related

@@ -1,6 +1,6 @@
 /**
- * @file FocusArchive.h
- * FocusArchive class declaration
+ * @file FocusArchiveEntry.h
+ * FocusArchiveEntry class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -24,21 +24,21 @@
 #include "Processor.h"
 #include "ProcessSession.h"
 
-//! FocusArchive Class
-class FocusArchive : public Processor
+//! FocusArchiveEntry Class
+class FocusArchiveEntry : public Processor
 {
 public:
 	//! Constructor
 	/*!
 	 * Create a new processor
 	 */
-	FocusArchive(std::string name, uuid_t uuid = NULL)
+	FocusArchiveEntry(std::string name, uuid_t uuid = NULL)
 	: Processor(name, uuid)
 	{
 		_logger = Logger::getLogger();
 	}
 	//! Destructor
-	virtual ~FocusArchive()
+	virtual ~FocusArchiveEntry()
 	{
 	}
 	//! Processor Name
@@ -48,9 +48,9 @@ public:
 	//! Supported Relationships
 	static Relationship Success;
 
-	//! OnTrigger method, implemented by NiFi FocusArchive
+	//! OnTrigger method, implemented by NiFi FocusArchiveEntry
 	virtual void onTrigger(ProcessContext *context, ProcessSession *session);
-	//! Initialize, over write by NiFi FocusArchive
+	//! Initialize, over write by NiFi FocusArchiveEntry
 	virtual void initialize(void);
 
 	typedef struct
@@ -66,19 +66,19 @@ public:
 	{
 		std::string archiveFormatName;
 		int archiveFormat;
+		std::string focusedEntry;
 		std::vector<ArchiveEntryMetadata> entryMetadata;
 	} ArchiveMetadata;
 
 	class ReadCallback : public InputStreamCallback
 	{
 	public:
-		ReadCallback(ProcessSession *session, ArchiveMetadata *archiveMetadata);
+		ReadCallback(ArchiveMetadata *archiveMetadata);
 		~ReadCallback();
 		virtual void process(std::ifstream *stream);
 
 	private:
 		std::shared_ptr<Logger> _logger;
-		ProcessSession *_session;
 		ArchiveMetadata *_archiveMetadata;
 	};
 

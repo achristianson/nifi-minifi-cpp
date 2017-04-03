@@ -90,9 +90,11 @@ public:
 	void penalize(FlowFileRecord *flow);
 	//! Import the existed file into the flow
 	void import(std::string source, FlowFileRecord *flow, bool keepSource = true, uint64_t offset = 0);
+	//! Export the flow file content to a file
+	void exportContent(std::string destination, FlowFileRecord *flow, bool keepContent = true);
 	//! Stash the content to a key
 	void stash(std::string key, FlowFileRecord *flow);
-	//! Restore content stashed to a key
+	//! Restore content previously stashed to a key
 	void restore(std::string key, FlowFileRecord *flow);
 
 	// Prevent default copy constructor and assignment operation
