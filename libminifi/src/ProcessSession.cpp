@@ -525,6 +525,9 @@ void ProcessSession::exportContent(std::string destination, FlowFileRecord *flow
 					flow->_claim->getContentFullPath().c_str(),
 					destination.c_str(),
 					flow->_claim->getFlowFileRecordOwnedCount());
+		    std::ifstream src(flow->_claim->getContentFullPath(), std::ios::binary);
+		    std::ofstream dst(destination, std::ios::binary);
+		    dst << src.rdbuf();
 		}
 	}
 }

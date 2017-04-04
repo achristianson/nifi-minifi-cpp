@@ -72,11 +72,13 @@ void UnfocusArchiveEntry::onTrigger(ProcessContext *context, ProcessSession *ses
 		if (flowFile->getAttribute("lens.archive.stack", existingLensStack))
 		{
 			_logger->log_info("UnfocusArchiveEntry loading existing lens context");
+			//TODO handle any exceptions that might arise from working with JSON data
 			ParseResult result = doc.Parse(existingLensStack.c_str());
 
 			if (!result)
 			{
-				_logger->log_error("UnfocusArchiveEntry JSON parse error: %s (%u)", GetParseError_En(result.Code()), result.Offset());
+				_logger->log_error("UnfocusArchiveEntry JSON parse error: %s (%u)",
+						GetParseError_En(result.Code()), result.Offset());
 				context->yield();
 				return;
 			}
@@ -95,7 +97,8 @@ void UnfocusArchiveEntry::onTrigger(ProcessContext *context, ProcessSession *ses
 		lensArchiveMetadata.archiveFormat = metadataDoc["archive_format"].GetUint64();
 		lensArchiveMetadata.focusedEntry = metadataDoc["focused_entry"].GetString();
 
-		for (auto itr = metadataDoc["archive_structure"].Begin(); itr != metadataDoc["archive_structure"].End(); ++itr)
+		for (auto itr = metadataDoc["archive_structure"].Begin();
+				itr != metadataDoc["archive_structure"].End(); ++itr)
 		{
 			const auto &entryVal = itr->GetObject();
 			ArchiveEntryMetadata metadata;
@@ -142,6 +145,7 @@ void UnfocusArchiveEntry::onTrigger(ProcessContext *context, ProcessSession *ses
 		}
 
 		session->restore(entry.stashKey, flowFile);
+		//TODO implement copy export/don't worry about multiple claims/optimal efficiency for *now*
 		session->exportContent(entry.tmpFileName, flowFile, false);
 	}
 
@@ -206,6 +210,7 @@ void UnfocusArchiveEntry::WriteCallback::process(std::ofstream *stream)
 	{
 		char buf[8192];
 		int fd;
+		struct stat st;
 	    auto entry = archive_entry_new();
 
 		_logger->log_info("UnfocusArchiveEntry writing entry %s",
@@ -214,27 +219,40 @@ void UnfocusArchiveEntry::WriteCallback::process(std::ofstream *stream)
 		archive_entry_set_filetype(entry, entryMetadata.entryType);
 	    archive_entry_set_pathname(entry, entryMetadata.entryName.c_str());
 	    archive_entry_set_perm(entry, entryMetadata.entryPerm);
-	    archive_write_header(outputArchive, entry);
 
 	    // If entry is regular file, copy entry contents
 		if (entryMetadata.entryType == AE_IFREG)
 		{
-			_logger->log_info("UnfocusArchiveEntry writing data from tmp file %s to archive entry %s",
+			stat(entryMetadata.tmpFileName.c_str(), &st);
+		    archive_entry_copy_stat(entry, &st);
+	    	archive_write_header(outputArchive, entry);
+
+			_logger->log_info("UnfocusArchiveEntry writing %d bytes of data from tmp file %s to archive entry %s",
+					st.st_size,
 					entryMetadata.tmpFileName.c_str(),
 					entryMetadata.entryName.c_str());
-			std::ifstream ifs(entryMetadata.tmpFileName, std::ifstream::in);
+			std::ifstream ifs(entryMetadata.tmpFileName, std::ifstream::in | std::ios::binary);
 
 			while (ifs.good())
 			{
 				ifs.read(buf, sizeof(buf));
 				auto len = ifs.gcount();
-				archive_write_data(outputArchive, buf, len);
+				if (archive_write_data(outputArchive, buf, len) < 0)
+				{
+					_logger->log_error("UnfocusArchiveEntry failed to write data to archive entry %s due to error: %s",
+							entryMetadata.entryName.c_str(),
+							archive_error_string(outputArchive));
+				}
 			}
 
 			ifs.close();
 
 			// Remove the tmp file as we are through with it
-			// std::remove(entryMetadata.tmpFileName.c_str());
+			std::remove(entryMetadata.tmpFileName.c_str());
+		}
+		else
+		{
+	    	archive_write_header(outputArchive, entry);
 		}
 
 	    archive_entry_free(entry);
