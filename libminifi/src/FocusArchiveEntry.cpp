@@ -260,6 +260,9 @@ void FocusArchiveEntry::ReadCallback::process(std::ifstream *stream)
 		metadata.entryType = entryType;
 		metadata.entryPerm = archive_entry_perm(entry);
 
+		_logger->log_info("FocusArchiveEntry entry type of %s is: %d", entryName, metadata.entryType);
+		_logger->log_info("FocusArchiveEntry entry perm of %s is: %d", entryName, metadata.entryPerm);
+
 		// Write content to tmp file
 		if (entryType == AE_IFREG)
 		{

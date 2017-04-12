@@ -267,7 +267,7 @@ void ManipulateArchive::onTrigger(ProcessContext *context, ProcessSession *sessi
 
 					if ((*it).entryName == before)
 					{
-						_logger->log_info("ManipulateArchive found entry %s to move element before", before.c_str());
+						_logger->log_info("ManipulateArchive found entry %s to move entry before", before.c_str());
 						archiveMetadata.entryMetadata.insert(it, moveEntry);
 
 						break;
@@ -288,6 +288,61 @@ void ManipulateArchive::onTrigger(ProcessContext *context, ProcessSession *sessi
 	// Perform operation: TOUCH
 	if (operation == "touch")
 	{
+		FocusArchiveEntry::ArchiveEntryMetadata touchEntry;
+		touchEntry.entryName = targetEntry;
+		touchEntry.entryType = AE_IFREG;
+
+		// Update metadata
+		if (after != "")
+		{
+			for (auto it = archiveMetadata.entryMetadata.begin();;)
+			{
+
+				if (it == archiveMetadata.entryMetadata.end())
+				{
+					_logger->log_info("ManipulateArchive could not find entry %s to touch entry after, so entry will be appended to end of archive", after.c_str());
+					archiveMetadata.entryMetadata.insert(it, touchEntry);
+					break;
+				}
+
+				if ((*it).entryName == after)
+				{
+					_logger->log_info("ManipulateArchive found entry %s to touch entry after", after.c_str());
+					it++;
+					archiveMetadata.entryMetadata.insert(it, touchEntry);
+					break;
+				}
+				else
+				{
+					it++;
+				}
+			}
+		}
+		else
+		{
+			for (auto it = archiveMetadata.entryMetadata.begin();;)
+			{
+
+				if (it == archiveMetadata.entryMetadata.end())
+				{
+					_logger->log_info("ManipulateArchive could not find entry %s to touch entry before, so entry will be appended to end of archive", before.c_str());
+					archiveMetadata.entryMetadata.insert(it, touchEntry);
+					break;
+				}
+
+				if ((*it).entryName == before)
+				{
+					_logger->log_info("ManipulateArchive found entry %s to touch entry before", before.c_str());
+					archiveMetadata.entryMetadata.insert(it, touchEntry);
+
+					break;
+				}
+				else
+				{
+					it++;
+				}
+			}
+		}
 	}
 
 	UnfocusArchiveEntry::WriteCallback writeCallback(&archiveMetadata);

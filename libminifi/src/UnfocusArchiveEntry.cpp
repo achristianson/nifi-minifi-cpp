@@ -217,15 +217,19 @@ void UnfocusArchiveEntry::WriteCallback::process(std::ofstream *stream)
 				entryMetadata.entryName.c_str());
 
 		archive_entry_set_filetype(entry, entryMetadata.entryType);
-	    archive_entry_set_pathname(entry, entryMetadata.entryName.c_str());
-	    archive_entry_set_perm(entry, entryMetadata.entryPerm);
+		archive_entry_set_pathname(entry, entryMetadata.entryName.c_str());
+		archive_entry_set_perm(entry, entryMetadata.entryPerm);
 
-	    // If entry is regular file, copy entry contents
+		// If entry is regular file, copy entry contents
 		if (entryMetadata.entryType == AE_IFREG)
 		{
-			stat(entryMetadata.tmpFileName.c_str(), &st);
-		    archive_entry_copy_stat(entry, &st);
-	    	archive_write_header(outputArchive, entry);
+			if (entryMetadata.tmpFileName != "")
+			{
+				stat(entryMetadata.tmpFileName.c_str(), &st);
+				archive_entry_copy_stat(entry, &st);
+			}
+
+			archive_write_header(outputArchive, entry);
 
 			_logger->log_info("UnfocusArchiveEntry writing %d bytes of data from tmp file %s to archive entry %s",
 					st.st_size,
