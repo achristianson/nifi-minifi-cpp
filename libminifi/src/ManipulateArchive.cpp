@@ -203,6 +203,86 @@ void ManipulateArchive::onTrigger(ProcessContext *context, ProcessSession *sessi
 	// Perform operation: MOVE
 	if (operation == "move")
 	{
+		bool found = false;
+		FocusArchiveEntry::ArchiveEntryMetadata moveEntry;
+
+		// Find item to move
+		for (auto it = archiveMetadata.entryMetadata.begin(); it != archiveMetadata.entryMetadata.end();)
+		{ 
+			if ((*it).entryName == targetEntry)
+			{
+				_logger->log_info("ManipulateArchive found entry %s to move", targetEntry.c_str());
+				moveEntry = *it;
+				it = archiveMetadata.entryMetadata.erase(it);
+				found = true;
+				break;
+			}
+			else
+			{
+				it++;
+			}
+		}
+
+		if (found)
+		{
+			moveEntry.entryName = destination;
+
+			// Update metadata
+			if (after != "")
+			{
+				for (auto it = archiveMetadata.entryMetadata.begin();;)
+				{
+
+					if (it == archiveMetadata.entryMetadata.end())
+					{
+						_logger->log_info("ManipulateArchive could not find entry %s to move entry after, so entry will be appended to end of archive", after.c_str());
+						archiveMetadata.entryMetadata.insert(it, moveEntry);
+						break;
+					}
+
+					if ((*it).entryName == after)
+					{
+						_logger->log_info("ManipulateArchive found entry %s to move entry after", after.c_str());
+						it++;
+						archiveMetadata.entryMetadata.insert(it, moveEntry);
+						break;
+					}
+					else
+					{
+						it++;
+					}
+				}
+			}
+			else
+			{
+				for (auto it = archiveMetadata.entryMetadata.begin();;)
+				{
+
+					if (it == archiveMetadata.entryMetadata.end())
+					{
+						_logger->log_info("ManipulateArchive could not find entry %s to move entry before, so entry will be appended to end of archive", before.c_str());
+						archiveMetadata.entryMetadata.insert(it, moveEntry);
+						break;
+					}
+
+					if ((*it).entryName == before)
+					{
+						_logger->log_info("ManipulateArchive found entry %s to move element before", before.c_str());
+						archiveMetadata.entryMetadata.insert(it, moveEntry);
+
+						break;
+					}
+					else
+					{
+						it++;
+					}
+				}
+			}
+		}
+		else
+		{
+			_logger->log_info("ManipulateArchive could not find entry %s to move", targetEntry.c_str());
+		}
 	}
 
 	// Perform operation: TOUCH
