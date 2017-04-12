@@ -56,6 +56,7 @@
 #include "ListenHTTP.h"
 #include "FocusArchiveEntry.h"
 #include "UnfocusArchiveEntry.h"
+#include "ManipulateArchive.h"
 #include "ExecuteProcess.h"
 #include "AppendHostInfo.h"
 // OpenSSL related

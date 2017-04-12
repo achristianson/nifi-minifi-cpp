@@ -209,11 +209,13 @@ Processor *FlowControllerImpl::createProcessor(std::string name, uuid_t uuid) {
 	} else if (name == ListenSyslog::ProcessorName) {
 		processor = new ListenSyslog(name, uuid);
 	} else if (name == ListenHTTP::ProcessorName) {
-        processor = new ListenHTTP(name, uuid);
+		processor = new ListenHTTP(name, uuid);
 	} else if (name == FocusArchiveEntry::ProcessorName) {
-        processor = new FocusArchiveEntry(name, uuid);
+		processor = new FocusArchiveEntry(name, uuid);
 	} else if (name == UnfocusArchiveEntry::ProcessorName) {
-        processor = new UnfocusArchiveEntry(name, uuid);
+		processor = new UnfocusArchiveEntry(name, uuid);
+	} else if (name == ManipulateArchive::ProcessorName) {
+		processor = new ManipulateArchive(name, uuid);
 	} else if (name == ExecuteProcess::ProcessorName) {
 		processor = new ExecuteProcess(name, uuid);
 	} else if (name == AppendHostInfo::ProcessorName) {

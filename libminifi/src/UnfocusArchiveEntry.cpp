@@ -160,8 +160,8 @@ void UnfocusArchiveEntry::onTrigger(ProcessContext *context, ProcessSession *ses
 	// 	flowFile->addAttribute("lens.archive.stack", stackStr);
 	// }
 
-    // Transfer to the relationship
-    session->transfer(flowFile, Success);
+	// Transfer to the relationship
+	session->transfer(flowFile, Success);
 }
 
 UnfocusArchiveEntry::WriteCallback::WriteCallback(ArchiveMetadata *archiveMetadata)

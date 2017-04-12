@@ -1,6 +1,6 @@
 /**
- * @file FocusArchiveEntry.h
- * FocusArchiveEntry class declaration
+ * @file ManipulateArchive.h
+ * ManipulateArchive class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -17,72 +17,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __FOCUS_ARCHIVE_H__
-#define __FOCUS_ARCHIVE_H__
-
-#include <list>
+#ifndef __MANIPULATE_ARCHIVE_H__
+#define __MANIPULATE_ARCHIVE_H__
 
 #include "FlowFileRecord.h"
 #include "Processor.h"
 #include "ProcessSession.h"
 
-//! FocusArchiveEntry Class
-class FocusArchiveEntry : public Processor
+#include "FocusArchiveEntry.h"
+#include "UnfocusArchiveEntry.h"
+
+//! ManipulateArchive Class
+class ManipulateArchive : public Processor
 {
 public:
 	//! Constructor
 	/*!
 	 * Create a new processor
 	 */
-	FocusArchiveEntry(std::string name, uuid_t uuid = NULL)
+	ManipulateArchive(std::string name, uuid_t uuid = NULL)
 	: Processor(name, uuid)
 	{
 		_logger = Logger::getLogger();
 	}
 	//! Destructor
-	virtual ~FocusArchiveEntry()
+	virtual ~ManipulateArchive()
 	{
 	}
 	//! Processor Name
 	static const std::string ProcessorName;
 	//! Supported Properties
-	static Property Path;
+	static Property Operation;
+	static Property Target;
+	static Property Destination;
+	static Property Before;
+	static Property After;
 	//! Supported Relationships
 	static Relationship Success;
 
-	//! OnTrigger method, implemented by NiFi FocusArchiveEntry
+	//! OnTrigger method, implemented by NiFi ManipulateArchive
 	virtual void onTrigger(ProcessContext *context, ProcessSession *session);
-	//! Initialize, over write by NiFi FocusArchiveEntry
+	//! Initialize, over write by NiFi ManipulateArchive
 	virtual void initialize(void);
-
-	typedef struct
-	{
-		std::string entryName;
-		std::string tmpFileName;
-		std::string stashKey;
-		mode_t entryType;
-		mode_t entryPerm;
-	} ArchiveEntryMetadata;
-
-	typedef struct
-	{
-		std::string archiveFormatName;
-		int archiveFormat;
-		std::string focusedEntry;
-		std::list<ArchiveEntryMetadata> entryMetadata;
-	} ArchiveMetadata;
-
-	class ReadCallback : public InputStreamCallback
-	{
-	public:
-		ReadCallback(ArchiveMetadata *archiveMetadata);
-		~ReadCallback();
-		virtual void process(std::ifstream *stream);
-
-	private:
-		std::shared_ptr<Logger> _logger;
-		ArchiveMetadata *_archiveMetadata;
-	};
 
 protected:
 

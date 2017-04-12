@@ -162,11 +162,11 @@ void FocusArchiveEntry::onTrigger(ProcessContext *context, ProcessSession *sessi
 		lensVal.AddMember("archive_structure", structVal, alloc);
 		doc.PushBack(lensVal, alloc);
 
-	    StringBuffer buffer;
-	    Writer<StringBuffer> writer(buffer);
-	    doc.Accept(writer);
+		StringBuffer buffer;
+		Writer<StringBuffer> writer(buffer);
+		doc.Accept(writer);
 
-	    auto stackStr = buffer.GetString();
+		auto stackStr = buffer.GetString();
 
 		if (!flowFile->updateAttribute("lens.archive.stack", stackStr))
 		{
