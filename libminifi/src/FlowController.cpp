@@ -216,6 +216,8 @@ Processor *FlowControllerImpl::createProcessor(std::string name, uuid_t uuid) {
 		processor = new UnfocusArchiveEntry(name, uuid);
 	} else if (name == ManipulateArchive::ProcessorName) {
 		processor = new ManipulateArchive(name, uuid);
+	} else if (name == ApplyTemplate::ProcessorName) {
+		processor = new ApplyTemplate(name, uuid);
 	} else if (name == ExecuteProcess::ProcessorName) {
 		processor = new ExecuteProcess(name, uuid);
 	} else if (name == AppendHostInfo::ProcessorName) {

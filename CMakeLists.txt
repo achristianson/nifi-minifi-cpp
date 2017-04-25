@@ -83,9 +83,9 @@ file(GLOB SPD_SOURCES "include/spdlog/*")
 add_subdirectory(thirdparty/yaml-cpp-yaml-cpp-0.5.3)
 set(CIVETWEB_ENABLE_CXX ON CACHE BOOL "Enable civet C++ library")
 add_subdirectory(thirdparty/civetweb-1.9.1)
+add_subdirectory(thirdparty/bustache)
 add_subdirectory(libminifi)
 add_subdirectory(main)
-
 
 # Generate source assembly
 set(ASSEMBLY_BASE_NAME "${CMAKE_PROJECT_NAME}-${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
