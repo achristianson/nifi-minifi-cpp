@@ -59,6 +59,7 @@ include_directories(../include)
 include_directories(../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include)
 include_directories(../thirdparty/civetweb-1.9.1/include)
 include_directories(../thirdparty/rapidjson-1.1.0/include)
+include_directories(../thirdparty/bustache/include)
 include_directories(include)
 
 file(GLOB SOURCES "src/*.cpp" "src/io/*.cpp" "src/utils/*.cpp")
@@ -80,6 +81,9 @@ if (NOT IOS)
 # Include Boost System
 find_package(Boost COMPONENTS system REQUIRED)
 target_link_libraries(minifi ${Boost_SYSTEM_LIBRARY})
+
+find_package(Boost COMPONENTS iostreams REQUIRED)
+target_link_libraries(minifi ${Boost_IOSTREAMS_LIBRARY})
 
 # Include LevelDB
 find_package (Leveldb REQUIRED)

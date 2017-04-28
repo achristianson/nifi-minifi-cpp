@@ -21,6 +21,11 @@
 #include <iostream>
 #include <fstream>
 
+#include <boost/iostreams/device/mapped_file.hpp>
+
+#include <bustache/model.hpp>
+#include <bustache/format.hpp>
+
 #include "ApplyTemplate.h"
 #include "ProcessContext.h"
 #include "ProcessSession.h"
@@ -50,14 +55,32 @@ void ApplyTemplate::onTrigger(ProcessContext *context, ProcessSession *session)
 		return;
 	}
 
+	WriteCallback cb(context, flowFile);
+	session->write(flowFile, &cb);
+	session->transfer(flowFile, Success);
+}
+
+ApplyTemplate::WriteCallback::WriteCallback(ProcessContext *context, FlowFileRecord *flowFile)
+{
+	_logger = Logger::getLogger();
+	_ctx = context;
+	_flowFile = flowFile;
+}
+
+void ApplyTemplate::WriteCallback::process(std::ofstream *stream)
+{
 	std::string templateFile;
-	context->getProperty(Template.getName(), templateFile);
+	_ctx->getProperty(Template.getName(), templateFile);
 
 	boost::iostreams::mapped_file_source file(templateFile);
 
 	bustache::format format(file);
-	bustache::object data{{"mustache", "bustache"}};
-	std::cout << format(data); // should print "bustache templating"
+	bustache::object data;
 
-	session->transfer(flowFile, Success);
+	for (const auto &attr : _flowFile->getAttributes())
+	{
+		data[attr.first] = attr.second;
+	}
+
+	*stream << format(data);
 }
