@@ -59,6 +59,7 @@ include_directories(../include)
 include_directories(../thirdparty/yaml-cpp-yaml-cpp-0.5.3/include)
 include_directories(../thirdparty/civetweb-1.9.1/include)
 include_directories(../thirdparty/jsoncpp/include)
+include_directories(../thirdparty/rapidjson-1.1.0/include)
 include_directories(include)
 
 file(GLOB SOURCES  "src/core/logging/*.cpp"  "src/io/*.cpp" "src/io/tls/*.cpp" "src/core/controller/*.cpp" "src/controllers/*.cpp" "src/core/*.cpp"  "src/core/repository/*.cpp" "src/core/yaml/*.cpp" "src/core/reporting/*.cpp"  "src/provenance/*.cpp" "src/processors/*.cpp" "src/*.cpp")
@@ -79,9 +80,9 @@ target_link_libraries (minifi ${ZLIB_LIBRARIES})
 
 if (NOT IOS)
 # Include Boost System
-find_package(Boost COMPONENTS system REQUIRED)
+find_package(Boost COMPONENTS system filesystem REQUIRED)
 find_package(CURL)
-target_link_libraries(minifi ${Boost_SYSTEM_LIBRARY})
+target_link_libraries(minifi ${Boost_SYSTEM_LIBRARY} ${Boost_FILESYSTEM_LIBRARY})
 
 if (CURL_FOUND)
         include_directories(${CURL_INCLUDE_DIRS})

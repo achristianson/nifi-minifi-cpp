@@ -158,6 +158,11 @@ class FlowFileRecord : public core::FlowFile, public io::Serializable {
     return content_full_fath_;
   }
 
+  /**
+   * Cleanly relinquish a resource claim
+   */
+  virtual void releaseClaim(std::shared_ptr<ResourceClaim> claim);
+
   FlowFileRecord &operator=(const FlowFileRecord &);
 
   FlowFileRecord(const FlowFileRecord &parent) = delete;

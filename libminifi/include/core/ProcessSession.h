@@ -141,6 +141,21 @@ class ProcessSession {
   void import(std::string source, std::shared_ptr<core::FlowFile> &&flow,
               bool keepSource = true, uint64_t offset = 0);
 
+  /**
+   * Exports the data stream to a file
+   * @param string file to export stream to
+   * @param flow flow file
+   * @param bool whether or not to keep the content in the flow file
+   */
+  void exportContent(const std::string &destination,
+                     std::shared_ptr<core::FlowFile> &flow,
+                     bool keepContent);
+
+  // Stash the content to a key
+  void stash(const std::string &key, std::shared_ptr<core::FlowFile> flow);
+	// Restore content previously stashed to a key
+  void restore(const std::string &key, std::shared_ptr<core::FlowFile> flow);
+
 // Prevent default copy constructor and assignment operation
 // Only support pass by reference or pointer
   ProcessSession(const ProcessSession &parent) = delete;

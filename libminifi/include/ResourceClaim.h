@@ -51,13 +51,13 @@ class ResourceClaim {
   // Destructor
   virtual ~ResourceClaim() {
   }
-  // increaseFlowFileRecordOwnedCount
-  void increaseFlowFileRecordOwnedCount() {
-    ++_flowFileRecordOwnedCount;
+  // Increase ownership count and return value immediately preceding the effects of this function
+  uint64_t increaseFlowFileRecordOwnedCount() {
+    return _flowFileRecordOwnedCount.fetch_add(1, std::memory_order_relaxed);
   }
-  // decreaseFlowFileRecordOwenedCount
-  void decreaseFlowFileRecordOwnedCount() {
-    --_flowFileRecordOwnedCount;
+  // Decrease ownership count and return value immediately preceding the effects of this function
+  uint64_t decreaseFlowFileRecordOwnedCount() {
+    return _flowFileRecordOwnedCount.fetch_sub(1, std::memory_order_relaxed);
   }
   // getFlowFileRecordOwenedCount
   uint64_t getFlowFileRecordOwnedCount() {

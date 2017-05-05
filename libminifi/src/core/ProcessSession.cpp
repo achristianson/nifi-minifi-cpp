@@ -774,6 +774,119 @@ void ProcessSession::import(std::string source,
   }
 }
 
+void ProcessSession::exportContent(
+    const std::string &destination,
+    std::shared_ptr<core::FlowFile> &flow,
+    bool keepContent) {
+  logger_->log_info(
+      "Exporting content of %s to %s",
+      flow->getUUIDStr().c_str(),
+      destination.c_str());
+
+  if (keepContent) {
+    logger_->log_info(
+        "Exporting content by copying %s to %s to %d keep current resource",
+        flow->getResourceClaim()->getContentFullPath().c_str(),
+        destination.c_str(),
+        flow->getResourceClaim()->getFlowFileRecordOwnedCount());
+    std::ifstream src(
+        flow->getResourceClaim()->getContentFullPath(),
+        std::ios::binary);
+    std::ofstream dst(
+        destination,
+        std::ios::binary);
+    dst << src.rdbuf();
+  }
+  else {
+    // Since we are not keeping content, rename the resource file to
+    // the destination
+    if (!flow->getResourceClaim()) {
+      logger_->log_warn(
+          "There is no resource for record %s to export.",
+          flow->getUUIDStr().c_str());
+      return;
+    }
+
+    // If we have the only claim to this resource, mv the file for
+    // optimal efficiency
+    if (flow->getResourceClaim()->getFlowFileRecordOwnedCount() == 1) {
+      logger_->log_info(
+          "Exporting content by renaming %s to %s",
+          flow->getResourceClaim()->getContentFullPath().c_str(),
+          destination.c_str());
+      std::rename(
+          flow->getResourceClaim()->getContentFullPath().c_str(),
+          destination.c_str());
+    }
+    else
+    {
+      logger_->log_info(
+          "Exporting content by copying %s to %s due to %d extant claims",
+          flow->getResourceClaim()->getContentFullPath().c_str(),
+          destination.c_str(),
+          flow->getResourceClaim()->getFlowFileRecordOwnedCount());
+      std::ifstream src(
+          flow->getResourceClaim()->getContentFullPath(),
+          std::ios::binary);
+      std::ofstream dst(
+          destination,
+          std::ios::binary);
+      dst << src.rdbuf();
+    }
+
+    flow->clearResourceClaim();
+  }
+}
+
+void ProcessSession::stash(const std::string &key, std::shared_ptr<core::FlowFile> flow) {
+  logger_->log_info(
+      "Stashing content from %s to key %s",
+      flow->getUUIDStr().c_str(), key.c_str());
+
+  if (!flow->getResourceClaim()) {
+    logger_->log_warn(
+        "Attempted to stash content of record %s when "
+        "there is no resource claim",
+        flow->getUUIDStr().c_str());
+    return;
+  }
+
+  // Stash the claim
+  auto claim = flow->getResourceClaim();
+  flow->setStashClaim(key, claim);
+
+  // Clear current claim
+  flow->clearResourceClaim();
+}
+
+void ProcessSession::restore(const std::string &key, std::shared_ptr<core::FlowFile> flow) {
+  logger_->log_info(
+      "Restoring content to %s from key %s",
+      flow->getUUIDStr().c_str(), key.c_str());
+
+  // Restore the claim
+  if (!flow->hasStashClaim(key)) {
+    logger_->log_warn(
+        "Requested restore to record %s from unknown key %s",
+        flow->getUUIDStr().c_str(), key.c_str());
+    return;
+  }
+
+  // Disown current claim if existing
+  if (flow->getResourceClaim()) {
+    logger_->log_warn(
+        "Restoring stashed content of record %s from key %s when there is "
+        "existing content; existing content will be overwritten",
+        flow->getUUIDStr().c_str(), key.c_str());
+    flow->releaseClaim(flow->getResourceClaim());
+  }
+
+  // Restore the claim
+  auto stashClaim = flow->getStashClaim(key);
+  flow->setResourceClaim(stashClaim);
+  flow->clearStashClaim(key);
+}
+
 void ProcessSession::commit() {
   try {
     // First we clone the flow record based on the transfered relationship for updated flow record
