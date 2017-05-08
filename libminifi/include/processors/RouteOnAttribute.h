@@ -56,6 +56,11 @@ class RouteOnAttribute : public core::Processor {
   static core::Relationship MaliciousActivity;
   static core::Relationship BenignTraffic;
   static core::Relationship Unmatched;
+
+  static const char* MALWARE_DETECTED_ATTRIBUTE_KEY_NAME;
+  static const char* MALICIOUS_ACTIVITY_ATTRIBUTE_KEY_NAME;
+  static const char* BENIGN_TRAFFIC_ATTRIBUTE_KEY_NAME;
+
   
   // Nest Callback Class for read stream
   class ReadCallback : public InputStreamCallback {

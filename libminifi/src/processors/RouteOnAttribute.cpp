@@ -84,7 +84,8 @@ void RouteOnAttribute::onTrigger(core::ProcessContext *context,
 
   if (!flow)
     return;
-
+  
+  std::map<std::string, std::string> attrs = flow->getAttributes();
   std::map<std::string, std::string>::iterator it;
   for (it = attrs.begin(); it != attrs.end(); it++) {
     
