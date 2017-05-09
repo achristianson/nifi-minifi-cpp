@@ -43,7 +43,7 @@ Processors:
     penalization period: 30 sec
     yield period: 1 sec
     run duration nanos: 0
-    auto-terminated relationships list: ['malwareDetected', 'Unmatched']
+    auto-terminated relationships list: ['malwareDetected']
     Properties:
       maliciousActivity Attribute: 'malicious'
       benignTraffic Attribute: 'benign'
