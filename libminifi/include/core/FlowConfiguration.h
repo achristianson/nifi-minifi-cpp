@@ -33,6 +33,7 @@
 #include "processors/LogAttribute.h"
 #include "processors/ExecuteProcess.h"
 #include "processors/AppendHostInfo.h"
+#include "processors/RouteOnAttribute.h"
 #include "core/Processor.h"
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
