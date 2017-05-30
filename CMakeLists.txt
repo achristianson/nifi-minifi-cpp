@@ -182,7 +182,7 @@ enable_testing(test)
     target_include_directories(testControllerServices PRIVATE BEFORE "libminifi/include/utils")
     target_include_directories(testControllerServices PRIVATE BEFORE "libminifi/include/processors")
     target_include_directories(testControllerServices PRIVATE BEFORE "libminifi/include/provenance")
-    target_link_libraries(testControllerServices ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB})
+    target_link_libraries(testControllerServices ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp c-library civetweb-cpp archive ${JSON_CPP_LIB})
     add_test(NAME TestControllerServices COMMAND testControllerServices "${CMAKE_SOURCE_DIR}/libminifi/test/resources/TestControllerServices.yml" "${CMAKE_SOURCE_DIR}/libminifi/test/resources/")
 
 
@@ -290,7 +290,7 @@ enable_testing(test)
         target_include_directories(testProcessors PRIVATE BEFORE ${CURL_INCLUDE_DIRS})
     	target_link_libraries(testProcessors ${CURL_LIBRARIES})
     endif(CURL_FOUND)
-    target_link_libraries(testProcessors ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp c-library civetweb-cpp ${JSON_CPP_LIB})
+    target_link_libraries(testProcessors ${CMAKE_THREAD_LIBS_INIT} ${UUID_LIBRARIES} ${LEVELDB_LIBRARIES} ${OPENSSL_LIBRARIES} minifi yaml-cpp c-library civetweb-cpp archive ${JSON_CPP_LIB})
     add_test(NAME TestProcessors COMMAND testProcessors)
 
 

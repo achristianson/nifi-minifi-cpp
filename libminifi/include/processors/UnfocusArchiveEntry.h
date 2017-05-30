@@ -29,6 +29,7 @@
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/logging/Logger.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -82,6 +83,8 @@ class UnfocusArchiveEntry : public core::Processor {
   //! Logger
   std::shared_ptr<Logger> _logger;
 };
+
+REGISTER_RESOURCE(UnfocusArchiveEntry);
 
 } /* namespace processors */
 } /* namespace minifi */
