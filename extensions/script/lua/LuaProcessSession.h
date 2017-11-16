@@ -40,7 +40,7 @@ class LuaProcessSession {
   std::shared_ptr<script::ScriptFlowFile> create();
   std::shared_ptr<script::ScriptFlowFile> create(const std::shared_ptr<script::ScriptFlowFile> &flow_file);
   void transfer(const std::shared_ptr<script::ScriptFlowFile> &flow_file, core::Relationship relationship);
-  void read(const std::shared_ptr<script::ScriptFlowFile> &flow_file, sol::table input_stream_callback);
+  void read(const std::shared_ptr<script::ScriptFlowFile> &script_flow_file, sol::table input_stream_callback);
   void write(const std::shared_ptr<script::ScriptFlowFile> &flow_file, sol::table output_stream_callback);
 
   class LuaInputStreamCallback : public InputStreamCallback {
