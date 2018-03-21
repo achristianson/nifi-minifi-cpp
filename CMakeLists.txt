@@ -81,16 +81,19 @@ if(NOT USE_SYSTEM_OPENSSL)
     GIT_TAG "190bd346e75575b9436a2e9e14b28618f0234e1b"
     SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-src"
     CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install"
-    UPDATE_COMMAND "./autogen.sh"
+    PATCH_COMMAND ./autogen.sh
   )
 
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl")
   add_library(crypto STATIC IMPORTED)
   set_target_properties(crypto PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libcrypto.a")
+  add_dependencies(crypto libressl-portable)
   add_library(ssl STATIC IMPORTED)
   set_target_properties(ssl PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libssl.a")
+  add_dependencies(ssl libressl-portable)
   add_library(tls STATIC IMPORTED)
   set_target_properties(tls PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libtls.a")
+  add_dependencies(tls libressl-portable)
 
   set(OPENSSL_FOUND "YES")
   set(OPENSSL_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/include")
