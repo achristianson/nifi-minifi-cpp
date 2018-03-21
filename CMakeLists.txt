@@ -28,6 +28,7 @@ option(PORTABLE "Instructs the compiler to remove architecture specific optimiza
 option(USE_SYSTEM_OPENSSL "Instructs the build system to search for and use an SSL library available in the host system" OFF)
 
 include(FeatureSummary)
+include(ExternalProject)
 
 # Use ccache if present
 find_program(CCACHE_FOUND ccache)
@@ -71,33 +72,45 @@ find_package(Threads REQUIRED)
 # Provide custom modules for the project
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-if (NOT USE_SYSTEM_OPENSSL)
-    message("Using bundled LibreSSL")
-    execute_process(
-        COMMAND ../thirdparty/prep-libressl
-        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-    )
-    add_subdirectory("${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-src")
-    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl")
-    set(OPENSSL_FOUND "YES")
-    set(OPENSSL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libressl/include")
-    set(OPENSSL_LIBRARIES crypto ssl tls)
-else()
-    # Set the right openssl root path
-    if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-        set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl/")
-    else()
-        set(OPENSSL_ROOT_DIR "/usr/lib/x86_64-linux-gnu")
-    endif()
+if(NOT USE_SYSTEM_OPENSSL)
+  message("Using bundled LibreSSL")
+  
+  ExternalProject_Add(
+    libressl-portable
+    GIT_REPOSITORY "https://github.com/libressl-portable/portable.git"
+    GIT_TAG "190bd346e75575b9436a2e9e14b28618f0234e1b"
+    SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-src"
+    CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install"
+    UPDATE_COMMAND "./autogen.sh"
+  )
 
-    # Include OpenSSL
-    find_package (OpenSSL REQUIRED)
-    if (OPENSSL_FOUND)
-        include_directories(${OPENSSL_INCLUDE_DIR})
-    else ()
-        message( FATAL_ERROR "OpenSSL was not found. Please install OpenSSL" )
-    endif (OPENSSL_FOUND)
-endif (USE_SYSTEM_OPENSSL)
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl")
+  add_library(crypto STATIC IMPORTED)
+  set_target_properties(crypto PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libcrypto.a")
+  add_library(ssl STATIC IMPORTED)
+  set_target_properties(ssl PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libssl.a")
+  add_library(tls STATIC IMPORTED)
+  set_target_properties(tls PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib/libtls.a")
+
+  set(OPENSSL_FOUND "YES")
+  set(OPENSSL_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/include")
+  set(OPENSSL_LIBRARIES tls ssl crypto)
+else()
+  # Set the right openssl root path
+  if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl/")
+  else()
+    set(OPENSSL_ROOT_DIR "/usr/lib/x86_64-linux-gnu")
+  endif()
+
+  # Include OpenSSL
+  find_package (OpenSSL REQUIRED)
+  if (OPENSSL_FOUND)
+    include_directories(${OPENSSL_INCLUDE_DIR})
+  else ()
+    message( FATAL_ERROR "OpenSSL was not found. Please install OpenSSL" )
+  endif (OPENSSL_FOUND)
+endif(USE_SYSTEM_OPENSSL)
 
 SET(TEST_DIR ${CMAKE_SOURCE_DIR}/libminifi/test)
 
