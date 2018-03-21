@@ -25,6 +25,7 @@ set(PROJECT_VERSION_MINOR 4)
 set(PROJECT_VERSION_PATCH 0)
 option(SKIP_TESTS "Skips building all tests." OFF)
 option(PORTABLE "Instructs the compiler to remove architecture specific optimizations" ON)
+option(USE_SYSTEM_OPENSSL "Instructs the build system to search for and use an SSL library available in the host system" OFF)
 
 include(FeatureSummary)
 
@@ -67,23 +68,41 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Search for threads
 find_package(Threads REQUIRED)
 
-# Set the right openssl root path
-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl/")
-else()
-    set(OPENSSL_ROOT_DIR "/usr/lib/x86_64-linux-gnu")
-endif()
-
-# Include OpenSSL
-find_package (OpenSSL REQUIRED)
-if (OPENSSL_FOUND)
-    include_directories(${OPENSSL_INCLUDE_DIR})
-else ()
-    message( FATAL_ERROR "OpenSSL was not found. Please install OpenSSL" )
-endif (OPENSSL_FOUND)
-
 # Provide custom modules for the project
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+if (NOT USE_SYSTEM_OPENSSL)
+    message("Using bundled LibreSSL")
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl")
+    add_subdirectory(thirdparty/libressl)
+    #include_directories(thirdparty/libressl/include)
+    set(OPENSSL_FOUND "YES")
+    set(OPENSSL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libressl/include")
+    set(OPENSSL_LIBRARIES crypto ssl tls)
+    add_custom_target(
+        libressl-autogen
+        COMMAND ./autogen.sh
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libressl"
+    )
+    add_dependencies(crypto libressl-autogen)
+    add_dependencies(ssl libressl-autogen)
+    add_dependencies(tls libressl-autogen)
+else()
+    # Set the right openssl root path
+    if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+        set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl/")
+    else()
+        set(OPENSSL_ROOT_DIR "/usr/lib/x86_64-linux-gnu")
+    endif()
+
+    # Include OpenSSL
+    find_package (OpenSSL REQUIRED)
+    if (OPENSSL_FOUND)
+        include_directories(${OPENSSL_INCLUDE_DIR})
+    else ()
+        message( FATAL_ERROR "OpenSSL was not found. Please install OpenSSL" )
+    endif (OPENSSL_FOUND)
+endif (USE_SYSTEM_OPENSSL)
 
 SET(TEST_DIR ${CMAKE_SOURCE_DIR}/libminifi/test)
 

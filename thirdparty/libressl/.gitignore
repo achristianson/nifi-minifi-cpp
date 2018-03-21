@@ -170,3 +170,4 @@ openbsd/
 *.tar.gz
 man/Makefile.am
 man/mandoc.db
+tests/init_pledge.c
