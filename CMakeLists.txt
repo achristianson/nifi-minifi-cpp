@@ -27,6 +27,7 @@ option(SKIP_TESTS "Skips building all tests." OFF)
 option(PORTABLE "Instructs the compiler to remove architecture specific optimizations" ON)
 option(USE_SYSTEM_OPENSSL "Instructs the build system to search for and use an SSL library available in the host system" ON)
 option(USE_SYSTEM_UUID "Instructs the build system to search for and use an UUID library available in the host system" ON)
+option(USE_SYSTEM_CURL "Instructs the build system to search for and use a cURL library available in the host system" ON)
 
 include(FeatureSummary)
 include(ExternalProject)
@@ -116,6 +117,33 @@ if (OPENSSL_FOUND)
 else ()
   message( FATAL_ERROR "OpenSSL was not found. Please install OpenSSL" )
 endif (OPENSSL_FOUND)
+
+if(NOT USE_SYSTEM_CURL)
+  message("Using bundled cURL")
+
+  set(CURL_C_FLAGS "-I${OPENSSL_INCLUDE_DIR}")
+  set(CURL_CXX_FLAGS "${CURL_C_FLAGS}")
+
+  ExternalProject_Add(
+    curl-external
+    GIT_REPOSITORY "https://github.com/curl/curl.git"
+    GIT_TAG "4d6bd91ab33328c6d27eddc32e064defc02dc4fd"  # Version 7.59.0
+    SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-src"
+    CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-install"
+                -DBUILD_CURL_EXE=OFF
+                -DCURL_STATICLIB=ON
+               "-DCMAKE_C_FLAGS=${CURL_C_FLAGS}"
+               "-DCMAKE_CXX_FLAGS=${CURL_CXX_FLAGS}"
+  )
+
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/curl/dummy")
+  add_library(curl STATIC IMPORTED)
+  set_target_properties(curl PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-install/lib/libcurl.a")
+  add_dependencies(curl curl-external)
+  set(CURL_FOUND "YES")
+  set(CURL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/curl/include")
+  set(CURL_LIBRARIES curl)
+endif()
 
 SET(TEST_DIR ${CMAKE_SOURCE_DIR}/libminifi/test)
 
