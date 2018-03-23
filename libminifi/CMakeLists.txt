@@ -57,7 +57,7 @@ include_directories(../thirdparty/yaml-cpp-yaml-cpp-20171024/include)
 
 include_directories(../thirdparty/rapidjson-1.1.0/include)
 include_directories(../thirdparty/concurrentqueue/)
-include_directories(../thirdparty/curl/)
+include_directories(../thirdparty/curl/include)
 include_directories(include)
 
 file(GLOB SOURCES  "src/sitetosite/*.cpp"  "src/core/logging/*.cpp"  "src/core/state/*.cpp" "src/c2/protocols/*.cpp" "src/c2/*.cpp" "src/io/*.cpp" "src/io/tls/*.cpp" "src/core/controller/*.cpp" "src/controllers/*.cpp" "src/core/*.cpp"  "src/core/repository/*.cpp" "src/core/yaml/*.cpp" "src/core/reporting/*.cpp"  "src/provenance/*.cpp" "src/utils/*.cpp" "src/*.cpp")
