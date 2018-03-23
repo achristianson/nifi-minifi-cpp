@@ -154,6 +154,8 @@ if(NOT USE_SYSTEM_CURL)
                 -DHAVE_POSIX_STRERROR_R=0
                 -DHAVE_POSIX_STRERROR_R__TRYRUN_OUTPUT=""
                 -DHAVE_POLL_FINE_EXITCODE=0
+                -DHAVE_FSETXATTR_5=0
+                -DHAVE_FSETXATTR_5__TRYRUN_OUTPUT=""
                "-DCMAKE_MODULE_PATH=${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl"
                "-DCMAKE_C_FLAGS=${CURL_C_FLAGS}"
                "-DCMAKE_CXX_FLAGS=${CURL_CXX_FLAGS}"
