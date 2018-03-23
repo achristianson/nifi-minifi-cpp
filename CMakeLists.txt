@@ -149,6 +149,11 @@ if(NOT USE_SYSTEM_CURL)
                 -DBUILD_CURL_EXE=OFF
                 -DCURL_STATICLIB=ON
                 -DHTTP_ONLY=ON
+                -DHAVE_GLIBC_STRERROR_R=1
+                -DHAVE_GLIBC_STRERROR_R__TRYRUN_OUTPUT=""
+                -DHAVE_POSIX_STRERROR_R=0
+                -DHAVE_POSIX_STRERROR_R__TRYRUN_OUTPUT=""
+                -DHAVE_POLL_FINE_EXITCODE=0
                "-DCMAKE_MODULE_PATH=${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl"
                "-DCMAKE_C_FLAGS=${CURL_C_FLAGS}"
                "-DCMAKE_CXX_FLAGS=${CURL_CXX_FLAGS}"
