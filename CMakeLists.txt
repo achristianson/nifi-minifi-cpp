@@ -161,7 +161,7 @@ else()
   add_subdirectory("thirdparty/uuid")
   set(UUID_FOUND "YES")
   set(UUID_LIBRARIES "uuid")
-  include_directories("thirdparty/uuid")
+  include_directories("thirdparty/uuid/include")
 endif()
 
 file(GLOB SPD_SOURCES "thirdparty/spdlog-20170710/include/spdlog/*")
