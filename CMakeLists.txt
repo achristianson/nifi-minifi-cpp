@@ -115,11 +115,7 @@ if(NOT USE_SYSTEM_OPENSSL)
   set(OPENSSL_FOUND "YES")
   set(OPENSSL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/libressl/include")
   set(OPENSSL_LIBRARIES tls ssl crypto)
-  set(OPENSSL_CMAKE_ROOT_DIR "-DOPENSSL_ROOT_DIR=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install")
-  set(OPENSSL_CMAKE_LIBRARIES_DIR "-DOPENSSL_LIBRARIES=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install/lib")
 else()
-  set(OPENSSL_CMAKE_ROOT_DIR "")
-  set(OPENSSL_CMAKE_LIBRARIES_DIR "")
   # Set the right openssl root path
   if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(OPENSSL_ROOT_DIR "/usr/local/opt/openssl/")
@@ -152,8 +148,7 @@ if(NOT USE_SYSTEM_CURL)
                "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-install"
                 -DBUILD_CURL_EXE=OFF
                 -DCURL_STATICLIB=ON
-               "${OPENSSL_CMAKE_ROOT_DIR}"
-               "${OPENSSL_CMAKE_LIBRARIES_DIR}"
+               "-DCMAKE_MODULE_PATH=${CMAKE_MODULE_PATH}"
                "-DCMAKE_C_FLAGS=${CURL_C_FLAGS}"
                "-DCMAKE_CXX_FLAGS=${CURL_CXX_FLAGS}"
     BUILD_BYPRODUCTS "thirdparty/curl-install/lib/libcurl.a"
