@@ -41,7 +41,7 @@ if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(minifi-http-curl "${CMAKE_THREAD_LIBS_INIT}")
 endif()
 
-include_directories(${CURL_INCLUDE_DIRS})
+include_directories(${CURL_INCLUDE_DIR})
 target_link_libraries(minifi-http-curl ${CURL_LIBRARIES})
 
 # Include UUID

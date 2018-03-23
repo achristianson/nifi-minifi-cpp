@@ -66,7 +66,7 @@ else ()
 	target_link_libraries (minifiexe -Wl,--whole-archive minifi -Wl,--no-whole-archive)
 endif ()
 
-target_link_libraries(minifiexe yaml-cpp ${UUID_LIBRARIES} ${OPENSSL_LIBRARIES})
+target_link_libraries(minifiexe yaml-cpp ${UUID_LIBRARIES} ${CURL_LIBRARIES} ${OPENSSL_LIBRARIES})
 
 if (APPLE)
 	get_property(extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
