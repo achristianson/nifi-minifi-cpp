@@ -147,6 +147,7 @@ if(NOT USE_SYSTEM_CURL)
     CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
                "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-install"
                 -DBUILD_CURL_EXE=OFF
+                -DBUILD_TESTING=OFF
                 -DCURL_STATICLIB=ON
                 -DHTTP_ONLY=ON
                 -DCURL_DISABLE_CRYPTO_AUTH=ON
