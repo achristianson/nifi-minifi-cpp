@@ -148,7 +148,7 @@ if(NOT USE_SYSTEM_CURL)
                "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-install"
                 -DBUILD_CURL_EXE=OFF
                 -DCURL_STATICLIB=ON
-               "-DCMAKE_MODULE_PATH=${CMAKE_MODULE_PATH}"
+               "-DCMAKE_MODULE_PATH=${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl"
                "-DCMAKE_C_FLAGS=${CURL_C_FLAGS}"
                "-DCMAKE_CXX_FLAGS=${CURL_CXX_FLAGS}"
     BUILD_BYPRODUCTS "thirdparty/curl-install/lib/libcurl.a"
