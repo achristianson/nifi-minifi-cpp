@@ -84,6 +84,9 @@ if(NOT USE_SYSTEM_OPENSSL)
     SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-src"
     CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install"
     PATCH_COMMAND ./autogen.sh
+    BUILD_BYPRODUCTS "thirdparty/libressl-install/lib/libcrypto.a"
+                     "thirdparty/libressl-install/lib/libssl.a"
+                     "thirdparty/libressl-install/lib/libtls.a"
   )
 
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ssl")
@@ -134,6 +137,7 @@ if(NOT USE_SYSTEM_CURL)
                 -DCURL_STATICLIB=ON
                "-DCMAKE_C_FLAGS=${CURL_C_FLAGS}"
                "-DCMAKE_CXX_FLAGS=${CURL_CXX_FLAGS}"
+    BUILD_BYPRODUCTS "thirdparty/curl-install/lib/libcurl.a"
   )
 
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/curl/dummy")
