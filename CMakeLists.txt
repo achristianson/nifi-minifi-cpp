@@ -32,6 +32,18 @@ option(USE_SYSTEM_CURL "Instructs the build system to search for and use a cURL 
 include(FeatureSummary)
 include(ExternalProject)
 
+set(PASSTHROUGH_CMAKE_ARGS -DANDROID_ABI=${ANDROID_ABI}
+                           -DANDROID_PLATFORM=${ANDROID_PLATFORM}
+                           -DANDROID_STL=${ANDROID_STL}
+                           -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+                           -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                           -DANDROID_NDK=${ANDROID_NDK}
+                           -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+                           -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+                           -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
+                           -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+                           -G${CMAKE_GENERATOR})
+
 # Use ccache if present
 find_program(CCACHE_FOUND ccache)
 if(CCACHE_FOUND)
@@ -82,7 +94,7 @@ if(NOT USE_SYSTEM_OPENSSL)
     GIT_REPOSITORY "https://github.com/libressl-portable/portable.git"
     GIT_TAG "190bd346e75575b9436a2e9e14b28618f0234e1b"
     SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-src"
-    CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install"
+    CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS} "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install"
     PATCH_COMMAND ./autogen.sh
     BUILD_BYPRODUCTS "thirdparty/libressl-install/lib/libcrypto.a"
                      "thirdparty/libressl-install/lib/libssl.a"
@@ -132,7 +144,8 @@ if(NOT USE_SYSTEM_CURL)
     GIT_REPOSITORY "https://github.com/curl/curl.git"
     GIT_TAG "4d6bd91ab33328c6d27eddc32e064defc02dc4fd"  # Version 7.59.0
     SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-src"
-    CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-install"
+    CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
+               "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/curl-install"
                 -DBUILD_CURL_EXE=OFF
                 -DCURL_STATICLIB=ON
                "-DCMAKE_C_FLAGS=${CURL_C_FLAGS}"
