@@ -149,6 +149,7 @@ if(NOT USE_SYSTEM_CURL)
                 -DBUILD_CURL_EXE=OFF
                 -DCURL_STATICLIB=ON
                 -DHTTP_ONLY=ON
+                -DCURL_DISABLE_CRYPTO_AUTH=ON
                 -DHAVE_GLIBC_STRERROR_R=1
                 -DHAVE_GLIBC_STRERROR_R__TRYRUN_OUTPUT=""
                 -DHAVE_POSIX_STRERROR_R=0
