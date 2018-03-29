@@ -101,7 +101,7 @@ if(NOT USE_SYSTEM_OPENSSL)
     GIT_REPOSITORY "https://github.com/libressl-portable/portable.git"
     GIT_TAG "190bd346e75575b9436a2e9e14b28618f0234e1b"
     SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-src"
-    CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS} "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install"
+    CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS} -DENABLE_ASM=OFF "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/libressl-install"
     PATCH_COMMAND ./autogen.sh
     BUILD_BYPRODUCTS "thirdparty/libressl-install/lib/libcrypto.a"
                      "thirdparty/libressl-install/lib/libssl.a"
