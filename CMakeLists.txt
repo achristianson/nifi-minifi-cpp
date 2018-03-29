@@ -28,6 +28,7 @@ option(PORTABLE "Instructs the compiler to remove architecture specific optimiza
 option(USE_SYSTEM_OPENSSL "Instructs the build system to search for and use an SSL library available in the host system" ON)
 option(USE_SYSTEM_UUID "Instructs the build system to search for and use an UUID library available in the host system" ON)
 option(USE_SYSTEM_CURL "Instructs the build system to search for and use a cURL library available in the host system" ON)
+option(USE_SYSTEM_ZLIB "Instructs the build system to search for and use a zlib library available in the host system" ON)
 
 include(FeatureSummary)
 include(ExternalProject)
@@ -41,6 +42,12 @@ set(PASSTHROUGH_CMAKE_ARGS -DANDROID_ABI=${ANDROID_ABI}
                            -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
                            -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
                            -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
+                           -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                           -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                           -DCMAKE_FIND_ROOT_PATH=${CMAKE_FIND_ROOT_PATH}
+                           -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=${CMAKE_FIND_ROOT_PATH_MODE_PROGRAM}
+                           -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=${CMAKE_FIND_ROOT_PATH_MODE_LIBRARY}
+                           -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=${CMAKE_FIND_ROOT_PATH_MODE_INCLUDE}
                            -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
                            -G${CMAKE_GENERATOR})
 
@@ -175,6 +182,34 @@ if(NOT USE_SYSTEM_CURL)
   set(CURL_FOUND "YES")
   set(CURL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/curl/include")
   set(CURL_LIBRARIES curl)
+endif()
+
+if(NOT USE_SYSTEM_ZLIB)
+  message("Using bundled zlib")
+
+  ExternalProject_Add(
+    zlib-external
+    GIT_REPOSITORY "https://github.com/madler/zlib.git"
+    GIT_TAG "cacf7f1d4e3d44d871b605da3b647f07d718623f"  # Version 1.2.11
+    SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/zlib-src"
+    CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
+               "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/thirdparty/zlib-install"
+    BUILD_BYPRODUCTS "thirdparty/curl-install/lib/libz.a"
+  )
+
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/zlib/dummy")
+  add_library(z STATIC IMPORTED)
+  set_target_properties(z PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/zlib-install/lib/libz.a")
+  add_dependencies(z zlib-external)
+  set(ZLIB_FOUND "YES")
+  set(ZLIB_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/zlib/include")
+  set(ZLIB_LIBRARIES z)
+else()
+  find_package (ZLIB REQUIRED)
+endif()
+
+if (ZLIB_FOUND)
+  include_directories(${ZLIB_INCLUDE_DIRS})
 endif()
 
 SET(TEST_DIR ${CMAKE_SOURCE_DIR}/libminifi/test)
