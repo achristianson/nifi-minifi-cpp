@@ -23,10 +23,12 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(TensorFlow REQUIRED)
+find_package(Protobuf REQUIRED)
 
 message("-- Found TensorFlow: ${TENSORFLOW_INCLUDE_DIRS}")
 
 include_directories(${TENSORFLOW_INCLUDE_DIRS})
+include_directories(${PROTOBUF_INCLUDE_DIRS})
 
 file(GLOB SOURCES  "*.cpp")
 
@@ -39,7 +41,7 @@ if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(minifi-tensorflow-extensions "${CMAKE_THREAD_LIBS_INIT}")
 endif()
 
-target_link_libraries(minifi-tensorflow-extensions ${TENSORFLOW_LIBRARIES})
+target_link_libraries(minifi-tensorflow-extensions ${TENSORFLOW_LIBRARIES} ${PROTOBUF_LIBRARIES})
 
 SET (TENSORFLOW-EXTENSIONS minifi-tensorflow-extensions PARENT_SCOPE)
 
