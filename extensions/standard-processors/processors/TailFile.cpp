@@ -68,6 +68,13 @@ core::Property TailFile::Delimiter(
         ->withDefaultValue<std::string>("\\n")
         ->build());
 
+core::Property TailFile::RecordLimit(
+    core::PropertyBuilder::createProperty("Record Limit")
+        ->withDescription("Limits the number of records read from a single file per processor invocation.")
+        ->isRequired(false)
+        ->withDefaultValue<uint64_t>(1000)
+        ->build());
+
 core::Property TailFile::TailMode(
     core::PropertyBuilder::createProperty("tail-mode", "Tailing Mode")
         ->withDescription("Specifies the tail file mode. In 'Single file' mode only a single file will be watched. "
@@ -318,6 +325,7 @@ void TailFile::initialize() {
   properties.insert(FileName);
   properties.insert(StateFile);
   properties.insert(Delimiter);
+  properties.insert(RecordLimit);
   properties.insert(TailMode);
   properties.insert(BaseDirectory);
   properties.insert(RecursiveLookup);
@@ -345,6 +353,9 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   if (context->getProperty(Delimiter.getName(), value)) {
     delimiter_ = parseDelimiter(value);
   }
+
+
+  context->getProperty(RecordLimit.getName(), record_limit_);
 
   context->getProperty(FileName.getName(), file_to_tail_);
 
@@ -703,6 +714,11 @@ void TailFile::processSingleFile(const std::shared_ptr<core::ProcessSession> &se
         updateStateAttributes(state_copy, flow_file->getSize(), file_reader.checksum());
 
         ++num_flow_files;
+
+        if (num_flow_files >= record_limit_) {
+          logger_->log_info("Reached record limit of %zu from TailFile input", record_limit_);
+          break;
+        }
 
       } else {
         session->remove(flow_file);

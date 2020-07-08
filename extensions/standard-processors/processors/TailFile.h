@@ -86,6 +86,7 @@ class TailFile : public core::Processor {
   static core::Property FileName;
   static core::Property StateFile;
   static core::Property Delimiter;
+  static core::Property RecordLimit;
   static core::Property TailMode;
   static core::Property BaseDirectory;
   static core::Property RecursiveLookup;
@@ -125,6 +126,9 @@ class TailFile : public core::Processor {
 
   // Delimiter for the data incoming from the tailed file.
   std::string delimiter_;
+
+  // Limit of records to create per trigger
+  uint64_t record_limit_ = 0;
 
   // StateManager
   std::shared_ptr<core::CoreComponentStateManager> state_manager_;
