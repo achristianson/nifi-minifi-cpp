@@ -15,7 +15,11 @@
 
 [<img src="https://nifi.apache.org/assets/images/minifi/minifi-logo.svg" width="300" height="126" alt="Apache NiFi MiNiFi"/>](https://nifi.apache.org/minifi/)
 
-# Apache NiFi -  MiNiFi - C++ [![Linux/Mac Build Status](https://travis-ci.org/apache/nifi-minifi-cpp.svg?branch=master)](https://travis-ci.org/apache/nifi-minifi-cpp) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/njagiyqmopexidsv/branch/master?svg=true)](https://ci.appveyor.com/project/ApacheSoftwareFoundation/nifi-minifi-cpp) 
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fachristianson%2Fnifi-minifi-cpp.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fachristianson%2Fnifi-minifi-cpp?ref=badge_large)
+
+# Apache NiFi -  MiNiFi - C++ [![Linux/Mac Build Status](https://travis-ci.org/apache/nifi-minifi-cpp.svg?branch=master)](https://travis-ci.org/apache/nifi-minifi-cpp) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/njagiyqmopexidsv/branch/master?svg=true)](https://ci.appveyor.com/project/ApacheSoftwareFoundation/nifi-minifi-cpp) [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fachristianson%2Fnifi-minifi-cpp.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fachristianson%2Fnifi-minifi-cpp?ref=badge_shield)
+
 
 MiNiFi is a child project effort of Apache NiFi.  This repository is for a native implementation in C++.
 
